@@ -13,7 +13,7 @@ body {
 .site-header {
     padding: 24px;
     text-align: center;
-    background: #243b53;
+    background: #f092e0;
     color: white;
 }
 
@@ -39,7 +39,7 @@ button {
     padding: 10px 16px;
     border: 0;
     border-radius: 5px;
-    background: #1769aa;
+    background: #f17ade;
     color: white;
     cursor: pointer;
     font-size: 1rem;
@@ -103,7 +103,7 @@ textarea {
 }
 
 .delete-btn {
-    background: #b42318;
+    background: #f87fda;
 }
 
 .delete-btn:hover {
