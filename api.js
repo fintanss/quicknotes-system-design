@@ -1,13 +1,12 @@
 const API_URL = "https://jsonplaceholder.typicode.com/posts";
 
 const loadButton = document.querySelector("#load-btn");
-const statusMessage = document.querySelector("#status");
-const notesList = document.querySelector("#notes-list");
-
 const noteForm = document.querySelector("#note-form");
 const titleInput = document.querySelector("#title-input");
 const bodyInput = document.querySelector("#body-input");
 const submitButton = document.querySelector("#submit-btn");
+const statusMessage = document.querySelector("#status");
+const notesList = document.querySelector("#notes-list");
 
 let notes = [];
 
@@ -47,8 +46,19 @@ function renderNotes() {
         const body = document.createElement("p");
         body.textContent = note.body || "";
 
+        const deleteButton = document.createElement("button");
+        deleteButton.type = "button";
+        deleteButton.className = "delete-btn";
+        deleteButton.textContent = "Delete";
+
+        deleteButton.addEventListener("click", () => {
+            deleteNote(note.id, deleteButton);
+        });
+
         item.appendChild(title);
         item.appendChild(body);
+        item.appendChild(deleteButton);
+
         notesList.appendChild(item);
     });
 }
@@ -62,26 +72,12 @@ async function loadNotes() {
         notes = await response.json();
 
         renderNotes();
-
-        if (notes.length === 0) {
-            setStatus("The server returned no notes.", "success");
-        } else {
-            setStatus(
-                `Loaded ${notes.length} notes from the server.`,
-                "success"
-            );
-        }
+        setStatus(`Loaded ${notes.length} notes from the server.`, "success");
     } catch (error) {
         setStatus(
-            "Unable to load notes. Please check your connection and try again.",
+            "Unable to load notes. Check your internet connection and try again.",
             "error"
         );
-
-        notesList.textContent = "";
-        const errorItem = document.createElement("li");
-        errorItem.className = "empty-state";
-        errorItem.textContent = "Notes could not be loaded.";
-        notesList.appendChild(errorItem);
     } finally {
         loadButton.disabled = false;
     }
@@ -121,29 +117,53 @@ async function createNote(event) {
             })
         });
 
-        const newNote = await response.json();
+        const createdNote = await response.json();
 
-        // JSONPlaceholder simulates creation; it does not permanently
-        // save the new note. Keep it in local memory for this page session.
-        notes.unshift(newNote);
+        // JSONPlaceholder simulates creation; it does not save the note permanently.
+        notes.unshift(createdNote);
         renderNotes();
 
         setStatus(
-            `Note created (status ${response.status}, id ${newNote.id}).`,
+            `Note created successfully (ID: ${createdNote.id}).`,
             "success"
         );
 
         noteForm.reset();
     } catch (error) {
-        setStatus(
-            "Unable to create the note. Please try again.",
-            "error"
-        );
+        setStatus("Unable to create the note. Please try again.", "error");
     } finally {
         submitButton.disabled = false;
     }
 }
 
+async function deleteNote(noteId, deleteButton) {
+    const confirmed = window.confirm("Are you sure you want to delete this note?");
+
+    if (!confirmed) {
+        return;
+    }
+
+    deleteButton.disabled = true;
+    setStatus("Deleting note...", "loading");
+
+    try {
+        await request(`${API_URL}/${noteId}`, {
+            method: "DELETE"
+        });
+
+        // Remove it from the page only after the API request succeeds.
+        notes = notes.filter((note) => note.id !== noteId);
+        renderNotes();
+
+        setStatus(
+            "Note deleted from the current list. The demo API does not permanently save deletions.",
+            "success"
+        );
+    } catch (error) {
+        setStatus("Unable to delete the note. Please try again.", "error");
+        deleteButton.disabled = false;
+    }
+}
+
 loadButton.addEventListener("click", loadNotes);
 noteForm.addEventListener("submit", createNote);
-
